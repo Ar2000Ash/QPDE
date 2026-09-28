@@ -1,0 +1,20 @@
+{
+  "job_type": "sample-hamiltonian-integer",
+  "device_type": "dirac-3",
+  "num_levels": [
+    "2 repeated for each of 24 logical variables"
+  ],
+  "num_samples": 20,
+  "relaxation_schedule": 1,
+  "polynomial": "upper-triangular normalized QUBO coefficients, constant term removed",
+  "constraints": "none; unconstrained binary quadratic objective",
+  "linear_term_encoding": "linear coefficients represented with a zero padded index in the degree-2 polynomial format",
+  "coefficient_normalization": "divide all nonzero coefficients by the largest absolute coefficient before submission",
+  "representative_instance": {
+    "qci_id": "QCI-001",
+    "pde_name": "Heat 1D",
+    "block": 1,
+    "column": 0,
+    "terms": 300
+  }
+}

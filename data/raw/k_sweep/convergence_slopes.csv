@@ -1,0 +1,3 @@
+pde,error_metric,slope_log2_error_vs_K,slope_log2_mean_inverse_error_vs_K,slope_log2_mean_qubo_energy_vs_K,expected_error_slope,expected_energy_slope
+klein_gordon_1d,rel_l2_vs_dense_final,-1.0510673348750195,-1.079967985639443,-1.9397020035662988,-1.0,-2.0
+poisson_2d,rel_l2_vs_discrete_exact,-0.9966780666375166,-1.0354225709372773,-1.9321661980343798,-1.0,-2.0

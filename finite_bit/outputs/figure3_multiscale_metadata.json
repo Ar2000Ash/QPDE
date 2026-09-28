@@ -1,0 +1,27 @@
+{
+  "backend": "exact reduced-grid CPU",
+  "boundary": "unchanged reconstructed manufactured Dirichlet traces",
+  "gamma0": {
+    "heat_1d": 0.6,
+    "burgers_1d": 0.6,
+    "poisson_2d": 0.01,
+    "helmholtz_2d": 0.01,
+    "klein_gordon_1d": 1
+  },
+  "shrink": 8,
+  "stages": 4,
+  "hyperparameters": {
+    "B": 2,
+    "M": 1,
+    "K": 10,
+    "dt": 0.001,
+    "T": 0.05
+  },
+  "schur": "recursively quantized previous inverse",
+  "scale": "predeclared gamma0*8**(-p), p=0,1,2,3; no classical solve used for scale",
+  "audit_only": "np.linalg.solve on residual used solely for post-hoc range check",
+  "total_calls": 480,
+  "total_correction_steps": 360,
+  "clipped_audit_corrections": 0,
+  "protocol": "GEOMETRIC_MULTISCALE"
+}

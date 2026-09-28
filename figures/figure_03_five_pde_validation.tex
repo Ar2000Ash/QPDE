@@ -1,0 +1,32 @@
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[
+    group style={group size=2 by 1, horizontal sep=1.00cm},
+    qpde axis,
+    width=0.425\textwidth,
+    height=0.30\textwidth,
+    ymode=log,
+    x tick label style={rotate=25,anchor=east,font=\scriptsize},
+    symbolic x coords={Heat,Burgers,Poisson,Helmholtz,Klein--Gordon},
+    xtick=data,
+    enlarge x limits=0.10,
+    ymin=1e-7,
+]
+\nextgroupplot[title={(a) End-to-end relative error},ylabel={$e_{\rm dense}$},ymax=7e-5]
+\addplot[only marks,mark=*,mark size=3.0pt,color=qpdeblue]
+    table[col sep=comma,x=short,y=rel_dense]{data/processed/figure3_multiscale_plot.csv};
+\nextgroupplot[title={(b) Maximum cached inverse residual},ylabel={$\rho_S$},ymax=1e-5]
+\addplot[only marks,mark=square*,mark size=2.8pt,color=qpdeteal]
+    table[col sep=comma,x=short,y=max_inv_res]{data/processed/figure3_multiscale_plot.csv};
+\end{groupplot}
+\end{tikzpicture}
+\caption{Exact finite-bit five-PDE validation under the prescribed
+multiscale correction schedule $\gamma_p=\gamma_0/8^p$, $p=0,1,2,3$.
+Panel (a) reports the relative final-state error
+against the dense numerical solve and panel (b) reports the largest cached
+Schur-inverse residual. The results use $B=2$, $M=1$, $K=10$
+and an exact reduced-grid CPU oracle. CUDA and QCI hardware experiments
+are reported separately.}
+\label{fig:fixed_validation}
+\end{figure*}

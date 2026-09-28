@@ -1,0 +1,4 @@
+method,relative_error_vs_dense,relative_residual,max_local_residual,mean_local_residual,median_objective_improvement_fraction,columns_improved_fraction,runtime_seconds_for_greedy_polish
+dense_direct_reference,0.0,4.370889002160777e-15,0.0,0.0,,,
+rounded_cached_inverse,0.0014550918390404,0.0087544398945209,0.0018307268418315,0.0013299915853757,0.0,0.0,
+greedy_polished_cached_inverse,0.0006401607568273,0.0137037909139984,0.0018114125295734,0.0012847463867741,0.0,0.4833333333333333,0.0653848629999629

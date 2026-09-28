@@ -1,0 +1,53 @@
+name: Reproduce numerical results
+
+on:
+  push:
+    branches: [main, publication]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  numerical:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Compile sources
+        run: python -m compileall -q src finite_bit/src finite_bit/tests experiments analysis
+      - name: Recompute five-PDE data
+        run: |
+          python finite_bit/src/figure3_control.py
+          python finite_bit/src/figure3_multiscale.py
+      - name: Regenerate and verify tables and figures
+        run: |
+          python analysis/build_processed_data.py
+          python analysis/generate_figures.py
+          python analysis/verify_results.py
+      - name: Check exact finite-bit experiments
+        run: |
+          python finite_bit/tests/check_oracle.py
+          python finite_bit/tests/check_boundaries.py
+          python finite_bit/tests/check_figure2.py
+          python finite_bit/tests/check_figure3_multiscale.py
+          python finite_bit/tests/check_figure3_multiscale_outputs.py
+          python finite_bit/tests/check_archived_qci.py
+      - name: Verify recorded QCI data and terminal fields
+        run: |
+          python analysis/check_qci_input_qubos.py
+          python analysis/check_dirac3_decode.py
+          python analysis/reconstruct_dirac3_pde.py
+          python analysis/audit_dirac3.py
+          python analysis/verify_qci_recovery.py
+      - name: Check CUDA QUBO interface on CPU
+        run: python finite_bit/tests/check_batch_qubo_cuda.py
+      - name: Recompute and check larger-block numerical studies
+        run: |
+          python experiments/run_large_block.py --output /tmp/large_block.csv
+          python experiments/run_b8_optimizer.py --output-dir /tmp/b8_optimizer
+          python analysis/check_experiment_outputs.py --large /tmp/large_block.csv --b8 /tmp/b8_optimizer

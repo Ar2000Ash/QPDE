@@ -1,0 +1,27 @@
+{
+  "B": 2,
+  "M": 1,
+  "K_LIST": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "gamma_poisson": 0.01,
+  "gamma_kg": 1.0,
+  "QUBO_MAX_BITS": 25,
+  "CHUNK_POWER": 20,
+  "torch_dtype": "float64",
+  "USE_TRUE_BRUTE_FORCE": true,
+  "poisson_nx": 6,
+  "poisson_ny": 2,
+  "kg_nx": 6,
+  "kg_dt": 0.015,
+  "kg_T": 0.3,
+  "kg_c": 1.0,
+  "kg_mu": 1.25,
+  "output_root": "k_sweep_poisson2d_gamma0p01_kg1d_gamma1_B2_M1_K4-10_results"
+}

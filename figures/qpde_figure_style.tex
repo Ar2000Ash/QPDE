@@ -1,0 +1,65 @@
+% Plot styles and colors used in the manuscript.
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{siunitx}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,backgrounds,matrix,shapes.geometric}
+\usepgfplotslibrary{groupplots}
+\pgfplotsset{compat=1.18}
+
+\definecolor{qpdeblue}{HTML}{1F5A94}
+\definecolor{qpdeteal}{HTML}{17827B}
+\definecolor{qpdeorange}{HTML}{D97706}
+\definecolor{qpdered}{HTML}{B6403A}
+\definecolor{qpdegray}{HTML}{667085}
+\definecolor{qpdedark}{HTML}{1F2937}
+\definecolor{qpdelight}{HTML}{F5F7FA}
+\definecolor{qpdeline}{HTML}{D0D5DD}
+
+\pgfplotsset{
+  qpde axis/.style={
+    width=\linewidth,
+    height=0.64\linewidth,
+    axis line style={draw=qpdedark, line width=0.65pt},
+    tick style={draw=qpdedark, line width=0.55pt},
+    tick label style={font=\small},
+    label style={font=\small},
+    title style={font=\small\bfseries},
+    legend style={
+      font=\footnotesize,
+      draw=none,
+      fill=none,
+      cells={anchor=west},
+      /tikz/every even column/.append style={column sep=0.55em}
+    },
+    grid=both,
+    major grid style={draw=qpdeline, line width=0.35pt},
+    minor grid style={draw=qpdeline!55, line width=0.25pt},
+    enlargelimits=false,
+    clip marker paths=true,
+  },
+  qpde blue/.style={color=qpdeblue, mark=*, very thick, mark size=1.8pt},
+  qpde teal/.style={color=qpdeteal, mark=square*, very thick, mark size=1.7pt},
+  qpde orange/.style={color=qpdeorange, mark=triangle*, very thick, mark size=2.0pt},
+  qpde red/.style={color=qpdered, mark=diamond*, very thick, mark size=1.8pt},
+  qpde reference/.style={color=qpdegray, densely dashed, thick, mark=none},
+}
+
+\tikzset{
+  qpdebox/.style={
+    rounded corners=2.2pt,
+    draw=qpdedark!82,
+    line width=0.7pt,
+    fill=white,
+    minimum height=10mm,
+    inner xsep=3mm,
+    inner ysep=2mm,
+    align=center,
+    font=\small
+  },
+  qpdeaccent/.style={qpdebox, draw=qpdeblue, fill=qpdeblue!5},
+  qpdecache/.style={qpdebox, draw=qpdeteal, fill=qpdeteal!6},
+  qpdearrow/.style={-{Latex[length=2.2mm,width=1.5mm]}, line width=0.8pt, draw=qpdedark!85},
+  qpdedashedarrow/.style={qpdearrow, dashed, draw=qpdegray},
+  qpdepanel/.style={font=\small\bfseries, text=qpdedark},
+}

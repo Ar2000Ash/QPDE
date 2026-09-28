@@ -1,0 +1,15 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Experiment outputs regenerated locally (repository root only)
+/outputs/
+
+# Editor / operating-system noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
