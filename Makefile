@@ -26,6 +26,7 @@ verify: tables
 qci: tables
 	$(PYTHON) analysis/check_qci_input_qubos.py
 	$(PYTHON) analysis/check_dirac3_decode.py
+	$(PYTHON) finite_bit/tests/check_archived_qci.py
 	$(PYTHON) analysis/reconstruct_dirac3_pde.py --write
 	$(PYTHON) analysis/audit_dirac3.py
 	$(PYTHON) analysis/verify_qci_recovery.py
@@ -36,6 +37,6 @@ experiments:
 	$(PYTHON) analysis/check_experiment_outputs.py
 
 solver-test:
-	$(PYTHON) finite_bit/tests/check_batch_qubo_cuda.py
+	$(PYTHON) finite_bit/tests/check_qubo_solver.py
 
 reproduce: figures verify qci experiments solver-test
