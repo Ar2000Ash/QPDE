@@ -2,6 +2,5 @@
   "elapsed_seconds": 7.375139022999974,
   "representative_instances": 32,
   "full_inverse_columns_polished": 960,
-  "random_seed_description": "deterministic seeds 100000+1000*block+column and 200000+1000*block+column",
-  "claim_caution": "No exact 96-bit enumeration and no new Dirac-3 hardware run are claimed."
+  "random_seed_description": "deterministic seeds 100000+1000*block+column and 200000+1000*block+column"
 }

@@ -32,7 +32,7 @@ def run():
                     assert np.isclose(a,b,rtol=2e-9,atol=5e-13),(fn,i,k,a,b)
         d=json.loads((stored_dir/'figure3_multiscale_metadata.json').read_text())
         assert d['total_calls']==480 and d['total_correction_steps']==360 and d['clipped_audit_corrections']==0
-    render() # Also verifies table, per-component field and residual-stage consistency.
+    render()
     print('PASS: committed multiscale tables, stage bitstrings, field curves, and figure/LaTeX sources agree with fresh five-PDE rerun')
 
 if __name__=='__main__':run()
