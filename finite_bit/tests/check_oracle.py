@@ -1,4 +1,4 @@
-"""CPU independent full-grid reference versus analytically reduced exact oracle."""
+"""Compare reduced-grid optimization with full finite-grid enumeration."""
 from pathlib import Path
 import sys
 import numpy as np

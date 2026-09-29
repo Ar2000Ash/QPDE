@@ -1,4 +1,4 @@
-"""Verify the multiscale five-PDE optimization and field metrics."""
+"""Check correction scales, inverse columns, and PDE results."""
 from __future__ import annotations
 
 import csv
@@ -12,8 +12,6 @@ from figure3_multiscale import compute,stage_gamma,NAMES,GAMMA,PASSES,B,M,K,SHRI
 from figure3_control import compute as fixed_compute
 from exact_oracle import decode_bits
 
-# Independently recorded pre-integration smoke values from the stand-alone
-# schedule experiment. This fixture is a regression, not used by the solver.
 EXPECTED={
  'heat_1d':(1.3367080088581643e-5,8.341045249140769e-7),
  'burgers_1d':(1.0986839891150165e-5,7.141050527137744e-7),
@@ -38,8 +36,6 @@ def verify():
         np.testing.assert_allclose((row['rel_dense'],row['max_inv_res']),EXPECTED[name],atol=3e-12,rtol=1e-8)
         assert np.linalg.norm(x-dense)/np.linalg.norm(dense)==row['rel_dense']
         assert max(np.linalg.norm(S@Y-np.eye(B),'fro') for S,Y in zip(Slist,Ylist))==row['max_inv_res']
-        # Each stage must *actually* solve a new finite-grid residual QUBO;
-        # reconstruct the previous current estimate directly from logged updates.
         by={(int(e['block']),int(e['column']),int(e['stage'])):e for e in events}
         for i,S in enumerate(Slist):
             for j in range(B):

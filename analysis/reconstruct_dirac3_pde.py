@@ -1,14 +1,4 @@
-#!/usr/bin/env python3
-"""Independently rebuild QCI-derived cached Schur factors and terminal PDE solves.
-
-Uses the preserved matrix entries, gamma and ORIGINAL HARDWARE BITSTRINGS, not
-archived decoded hardware vectors or archived hardware solution columns.
-
-The archived DENSE TERMINAL REFERENCE field defines a reproducible terminal RHS
-b=A@u_ref. This verifies the entire cached linear solve and paper's terminal
-Table 6 / Fig. 7, but does not recreate historical transient forcing/BC histories.
-No QCI connection or original upload polynomial is required.
-"""
+"""Decode QCI inverse columns and reconstruct the terminal PDE fields."""
 from __future__ import annotations
 import argparse
 from pathlib import Path
@@ -39,19 +29,16 @@ def decode(bitstr: str, gamma: float) -> np.ndarray:
 def operator_blocks(name: str, schur: list[np.ndarray]) -> tuple[np.ndarray,np.ndarray,np.ndarray,dict]:
     D=schur[0].copy(); dS=D-schur[1]
     if name=='Heat 1D':
-        # Adjacent 1D grid points couple across a two-point block boundary.
         r=-float(D[0,1]); E=np.array([[0.,-r],[0.,0.]]);U=E.T
         assert abs(r-0.03528)<1e-12
         meta={'coupling':r,'type':'one-dimensional tridiagonal'}
     elif name=='Poisson 2D':
-        # Ten x-lines by two y-interior points; dx=1/11 and dy=1/3.
         inv=np.linalg.inv(D)
         c=float(np.sqrt(dS[0,0]/inv[0,0]))
         assert abs(c-121.)<1e-10
         E=U=-c*np.eye(2)
         meta={'x_laplacian_coupling':c,'y_laplacian_coupling':9.,'type':'two-point line blocks'}
     elif name=='Klein-Gordon 1D':
-        # Interleaved (u_i,v_i) state. Only the v-equation couples u-neighbours.
         inv=np.linalg.inv(D)
         c=float(np.sqrt(dS[1,0]/inv[0,1]));assert abs(c-0.14641)<1e-11
         E=U=np.array([[0.,0.],[-c,0.]])
@@ -131,7 +118,6 @@ def regenerate(raw:Path=RAW, out:Path=OUT, write:bool=False, strict:bool=True)->
         assert largest_schur<1e-10,(name,largest_schur)
         A=assemble(D,E,U,10)
         reference,archived,orig=get_ref_and_archived(raw,name)
-        # Precisely defined benchmark terminal RHS. Does NOT claim recovered time histories.
         rhs=A@reference
         computed=cached_solve(E,U,hw_inv,rhs)
         exact_comp=cached_solve(E,U,exact_inv,rhs)
@@ -146,7 +132,7 @@ def regenerate(raw:Path=RAW, out:Path=OUT, write:bool=False, strict:bool=True)->
         summary={'pde':name,'relative_error':err,'relative_residual':resid,'max_abs_error':float(np.max(np.abs(computed-reference))),
                  'max_abs_difference_from_archived_hardware_field':delta,'max_abs_schur_reconstruction_difference':largest_schur,
                  'exact_reference_bitstring_solution_relative_error':float(np.linalg.norm(exact_comp-reference)/np.linalg.norm(reference)),
-                 'rhs_construction':'A @ archived dense terminal reference (not archived transient forcing history)'}
+                 'rhs_construction':'A @ dense_terminal_reference'}
         table.append(summary)
         if name!='Klein-Gordon 1D':
             frame=pd.DataFrame({'index':orig['index'].astype(int),'dense_ground_truth':reference,'qci_quantum':computed,'abs_error':abs(computed-reference)})
@@ -165,7 +151,6 @@ def regenerate(raw:Path=RAW, out:Path=OUT, write:bool=False, strict:bool=True)->
                     slices.append({'x_index':xi,'slice':slice_id,'dense':reference[i],'hardware':computed[i],
                                   'abs_error':abs(computed[i]-reference[i])})
             all_fields['dirac_poisson_slices.csv']=pd.DataFrame(slices)
-        # Additional fully explicit terminal linear system: 20x20 A, b, reference, hardware.
         all_fields[f'dirac_{name.lower().replace(" ","_").replace("-","_")}_terminal_rhs.csv']=pd.DataFrame({'index':np.arange(1,21),'rhs':rhs,'dense_reference':reference,'hardware_reconstructed':computed,'exact_reference_bitstrings':exact_comp})
     full=pd.DataFrame(table); all_fields['dirac_pde_independent_reconstruction.csv']=full
     all_fields['dirac_local_inverse_audit.csv']=pd.DataFrame(detail)
@@ -182,4 +167,4 @@ if __name__=='__main__':
     args=parser.parse_args()
     result=regenerate(args.raw_dir,args.out_dir,args.write)
     print(result['summary'].to_string(index=False))
-    print('All three archived terminal fields reconstructed from saved bitstrings and Schur blocks.')
+    print('All three terminal fields reconstructed from QCI bitstrings and Schur blocks.')

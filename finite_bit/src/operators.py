@@ -1,4 +1,4 @@
-"""Assemble the operators used in the five-PDE validation."""
+"""Assemble the five-PDE benchmark operators."""
 from __future__ import annotations
 from pde_models import elliptic_blocks, heat_matrix, kg_matrix
 

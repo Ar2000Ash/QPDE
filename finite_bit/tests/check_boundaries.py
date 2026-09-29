@@ -1,4 +1,4 @@
-"""Check the discretized operators and boundary-condition fingerprints."""
+"""Check benchmark operators, manufactured fields, and boundary values."""
 import sys
 from pathlib import Path
 import numpy as np
@@ -42,5 +42,5 @@ def run():
         close(name+' manufactured first',exact[0],target_first)
         xx=np.array([(i/11,j/3) for i in range(1,11) for j in range(1,3)])
         close(name+' max continuous-discrete residual',np.max(np.abs(b-bc-forcing(name,xx[:,0],xx[:,1]))),trunc)
-    print('PASS: five operators, manufactured fields, physical Dirichlet traces, and three complete precise time integrators match archive fingerprints')
+    print('PASS: five operators, manufactured fields, physical Dirichlet traces, and three complete precise time integrators match reference values')
 if __name__=='__main__':run()

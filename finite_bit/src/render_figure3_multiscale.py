@@ -1,4 +1,4 @@
-"""Render five-PDE diagnostic plots and manuscript table data."""
+"""Render the five-PDE field and correction diagnostics."""
 from __future__ import annotations
 
 import csv
@@ -34,17 +34,17 @@ def export(fig,basename):
 
 
 def main():
-    new=read(OUT/'figure3_multiscale.csv');old=read(OUT/'figure3_control.csv')
+    results=read(OUT/'figure3_multiscale.csv');control=read(OUT/'figure3_control.csv')
     events=read(OUT/'figure3_multiscale_stage_log.csv');fields=read(OUT/'figure3_multiscale_fields.csv')
-    assert [r['pde'] for r in new]==list(ORDER) and len(events)==480 and len(fields)==120
-    assert [r['pde'] for r in old]==list(ORDER)
-    control_by={r['pde']:r for r in old}
+    assert [r['pde'] for r in results]==list(ORDER) and len(events)==480 and len(fields)==120
+    assert [r['pde'] for r in control]==list(ORDER)
+    control_by={r['pde']:r for r in control}
     fig,(ax,ay)=plt.subplots(1,2,figsize=(12.8,4.7),layout='constrained')
     xs=np.arange(5)
     for panel, key, lab in ((ax,'rel_dense','Relative error vs dense numerical solve'),
                              (ay,'max_inv_res',r'Maximum $\|S_i\widehat{S_i^{-1}}-I\|_F$')):
-        v=np.array([float(r[key]) for r in new]);oldv=np.array([float(control_by[r['pde']][key]) for r in new])
-        panel.semilogy(xs,oldv,linestyle='None',marker='o',fillstyle='none',markersize=9,
+        v=np.array([float(r[key]) for r in results]);controlv=np.array([float(control_by[r['pde']][key]) for r in results])
+        panel.semilogy(xs,controlv,linestyle='None',marker='o',fillstyle='none',markersize=9,
                        markeredgewidth=1.5,label='Single-grid baseline (three zero corrections)')
         panel.semilogy(xs,v,linestyle='None',marker='D',markersize=7,
                        label='Predetermined 1/8 multiscale refinement')
@@ -57,9 +57,8 @@ def main():
     fig.suptitle(r'Five PDEs  |  $B=2$, $M=1$, $K=10$  |  $\gamma_p=\gamma_0 8^{-p}$, $p=0,1,2,3$')
     export(fig,'figure3_multiscale')
 
-    # True intermediate block-inverse residuals after each QUBO stage, not just endpoint.
     stage_summ=[];fig,ax=plt.subplots(figsize=(10.2,5.0),layout='constrained')
-    for row,label in zip(new,DISPLAY):
+    for row,label in zip(results,DISPLAY):
         group=[e for e in events if e['pde']==row['pde']]
         curves=[]
         for p in range(4):
@@ -102,7 +101,7 @@ def main():
                 axis.plot(xx,f[yi::2],'--o',ms=2.5,label=f'Multiscale y={(yi+1)/3:.2f}')
             assert max(abs(d-a))<2e-12
             axis.set_xlabel('Spatial coordinate x (10×2 grid)')
-        err=float(np.linalg.norm(f-d)/np.linalg.norm(d));assert abs(err-float(next(r for r in new if r['pde']==name)['rel_dense']))<2e-12
+        err=float(np.linalg.norm(f-d)/np.linalg.norm(d));assert abs(err-float(next(r for r in results if r['pde']==name)['rel_dense']))<2e-12
         details[name]={'rel_dense':err,'max_abs_dense':float(np.max(abs(f-d)))}
         axis.set_title(f'{DISPLAY[ORDER.index(name)]}: relative error {err:.2e}')
         axis.grid(alpha=.2);axis.legend(fontsize=7)
@@ -113,22 +112,21 @@ def main():
         axis.plot(xx,d[v::2],'-',label='Dense numerical',lw=1.8)
         axis.plot(xx,f[v::2],'--o',label='Multiscale QUBO',ms=2.5)
         err=float(np.linalg.norm(f[v::2]-d[v::2])/np.linalg.norm(d[v::2]))
-        assert abs(err-float(next(r for r in new if r['pde']==name)[label+'_rel_dense']))<2e-12
+        assert abs(err-float(next(r for r in results if r['pde']==name)[label+'_rel_dense']))<2e-12
         details[name+'_'+label]={'rel_dense':err,'max_abs_dense':float(max(abs(f[v::2]-d[v::2])))}
         axis.set_title(f'Klein–Gordon {label}: relative error {err:.2e}')
         axis.set_xlabel('Spatial coordinate x');axis.grid(alpha=.2);axis.legend(fontsize=8)
     export(fig,'figure3_multiscale_ground_truth')
 
-    # Data for the manuscript's Figure 3 and Table 3.
     plot=[dict(short=DISPLAY[i].replace('–','--'),rel_dense=r['rel_dense'],max_inv_res=r['max_inv_res'],
-               baseline_rel_dense=control_by[r['pde']]['rel_dense'],baseline_max_inv_res=control_by[r['pde']]['max_inv_res']) for i,r in enumerate(new)]
+               baseline_rel_dense=control_by[r['pde']]['rel_dense'],baseline_max_inv_res=control_by[r['pde']]['max_inv_res']) for i,r in enumerate(results)]
     MAN.mkdir(parents=True,exist_ok=True)
     baseline_kg=read(OUT/'figure3_control_fields.csv')
     baseline_kg=sorted((r for r in baseline_kg if r['pde']=='klein_gordon_1d'),key=lambda r:int(r['component_index']))
     assert len(baseline_kg)==40
     bf=np.array([float(r['single_grid']) for r in baseline_kg]);bd=np.array([float(r['dense_numerical']) for r in baseline_kg])
-    components=[dict(component=v,rel_dense=new[-1][v+'_rel_dense'],
-                     rel_manufactured=new[-1][v+'_rel_exact'],
+    components=[dict(component=v,rel_dense=results[-1][v+'_rel_dense'],
+                     rel_manufactured=results[-1][v+'_rel_exact'],
                      baseline_rel_dense=float(np.linalg.norm((bf-bd)[j::2])/np.linalg.norm(bd[j::2])))
                 for v,j in (('u',0),('v',1))]
     for name,values in [('figure3_multiscale_plot.csv',plot),('figure3_multiscale_kg_components.csv',components)]:
@@ -137,7 +135,7 @@ def main():
     md=['| PDE | $\\gamma_0$ | $N$ | $\\kappa_2(A)$ | $e_{\\rm dense}$ | $r_\\infty$ | $\\rho_S$ | $\\max\\kappa_2(S_i)$ | Calls / nonzero corrections |',
         '|:--|--:|--:|--:|--:|--:|--:|--:|--:|']
     tex=[]
-    for r in new:
+    for r in results:
         vals=(r['label'],f'{float(r["gamma0"]):.2f}',r['N'],f'{float(r["cond_A"]):.2f}',sci(r['rel_dense']),sci(r['r_inf']),sci(r['max_inv_res']),f'{float(r["max_schur_cond"]):.2f}',f'{r["calls"]} / {r["nonzero_correction_updates"]}')
         md.append('| '+' | '.join(vals).replace('--','–')+' |')
         tex.append(' & '.join(vals)+r' \\')
@@ -145,7 +143,7 @@ def main():
     (MAN/'TABLE3_NEW_MULTISCALE_rows.tex').write_text('\n'.join(tex)+'\n',encoding='utf8')
     compare=['| PDE | Fixed-grid $e_{\rm dense}$ | Multiscale $e_{\rm dense}$ | Fixed-grid $\rho_S$ | Multiscale $\rho_S$ |',
              '|:--|--:|--:|--:|--:|']
-    for r in new:
+    for r in results:
         o=control_by[r['pde']]
         compare.append('| '+' | '.join((r['label'].replace('--','–'),sci(o['rel_dense']),sci(r['rel_dense']),sci(o['max_inv_res']),sci(r['max_inv_res'])))+' |')
     (MAN/'TABLE3_BASELINE_VS_MULTISCALE.md').write_text('\n'.join(compare)+'\n',encoding='utf8')
@@ -155,6 +153,6 @@ def main():
     (MAN/'TABLE3_KG_COMPONENTS.md').write_text('\n'.join(kgcomp)+'\n',encoding='utf8')
     (FIG/'figure3_multiscale_ground_truth_metrics.json').write_text(json.dumps({'method':'predetermined multiscale correction schedule','fields':details},indent=2)+'\n')
     print('Rendered: main Figure 3, stage diagnostics, 6-panel field overlay, Table 3 and manuscript plot data.')
-    return new
+    return results
 
 if __name__=='__main__':main()

@@ -1,9 +1,4 @@
-"""Signed fixed-point encoding and small QUBO-space optimization utilities.
-
-The 96-bit experiment compares a rounded fixed-point state, greedy single-bit
-polishing, and simulated annealing followed by greedy polishing.  This module contains
-exactly those encoding and local-search operations in a vendor-neutral form.
-"""
+"""Fixed-point encoding and local QUBO search."""
 
 from __future__ import annotations
 
@@ -33,26 +28,18 @@ class BitLayout:
 
 
 def make_bit_layout(block_size: int, integer_bits: int, fractional_bits: int) -> BitLayout:
-    """Create the bit-to-scalar mapping for the signed fixed-point encoding.
-
-    The released 96-bit experiment uses one sign bit, one integer bit, and ten
-    fractional bits per scalar.  The implementation below also supports more than one
-    integer bit so the representation is explicit rather than hard-coded to M=1.
-    """
+    """Create the bit-to-scalar mapping for the signed fixed-point encoding."""
     scalar_index: list[int] = []
     weights: list[float] = []
 
     for ell in range(block_size):
-        # Sign bit carries weight -2^M.
         scalar_index.append(ell)
         weights.append(-(2.0**integer_bits))
 
-        # Non-negative integer bits have weights 2^0, ..., 2^(M-1).
         for m in range(integer_bits):
             scalar_index.append(ell)
             weights.append(2.0**m)
 
-        # Fractional bits have weights 2^-1, ..., 2^-K.
         for k in range(1, fractional_bits + 1):
             scalar_index.append(ell)
             weights.append(2.0 ** (-k))
@@ -79,12 +66,10 @@ def integer_code_to_bits(code: int, layout: BitLayout) -> np.ndarray:
     else:
         remainder = int(code)
 
-    # Integer bits occupy positions 1 ... M.
     integer_part, fractional_part = divmod(remainder, 2**k)
     for bit in range(m):
         q[1 + bit] = (integer_part >> bit) & 1
 
-    # Fractional bits are stored from largest to smallest fractional weight.
     for frac_bit in range(1, k + 1):
         bit_value = 2 ** (k - frac_bit)
         if fractional_part >= bit_value:
@@ -165,7 +150,7 @@ def greedy_descent(
     layout: BitLayout,
     max_sweeps: int = 8,
 ) -> tuple[np.ndarray, float, int, int]:
-    """Best-improvement single-bit descent used in the reported experiment."""
+    """Best-improvement single-bit descent used in the experiment."""
     q = q0.copy()
     e = np.zeros(layout.block_size, dtype=float)
     e[column] = 1.0
@@ -282,7 +267,6 @@ def simulated_annealing(
     if best_q is None:
         raise RuntimeError("annealing produced no candidate state")
 
-    # The reported experiment uses annealing followed by the same greedy local polish.
     best_q, best_energy, greedy_flips, _ = greedy_descent(
         S,
         column,

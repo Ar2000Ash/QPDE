@@ -1,11 +1,6 @@
-"""Exact two-component fixed-point QUBO minimization.
-
-The reduced-grid CPU solver finds the global finite-grid optimum by
-conditioning on one scalar. Full binary enumeration is optional on CUDA.
-"""
+"""Minimize two-component QUBOs on the signed fixed-point grid."""
 from __future__ import annotations
 from dataclasses import dataclass
-import math
 import numpy as np
 
 
@@ -56,16 +51,7 @@ def qubo_upper(S: np.ndarray, column: int, gamma: float, M: int=1,K: int=10) -> 
 
 
 def reduced_exact(S: np.ndarray, target: np.ndarray, gamma:float, M:int=1,K:int=10) -> ExactResult:
-    """Exact global two-scalar minimization, using exact nearest-grid reduction.
-
-    For each first code, second-code objective is a positive quadratic; its
-    grid optimum is one of floor/ceil of its continuous optimum. For the
-    second distinct best state, also include one neighbor on either side.
-    This is a proof of optimality over every representable pair, not a
-    heuristic. Numbers are evaluated in float64; very close ties must be
-    checked using additional precision if a mathematical certificate is
-    required beyond floating-point accuracy.
-    """
+    """Exact global two-scalar minimization, using exact nearest-grid reduction."""
     S=np.asarray(S,dtype=float); target=np.asarray(target,dtype=float)
     if S.shape!=(2,2) or target.shape!=(2,) or gamma<=0 or not np.all(np.isfinite(S)):
         raise ValueError('invalid Schur inputs')
@@ -103,36 +89,3 @@ def reduced_exact(S: np.ndarray, target: np.ndarray, gamma:float, M:int=1,K:int=
     count=int(np.unique(ranks[abs(energy-minimum)<=(1e-13*max(1.,minimum))]).size)
     return ExactResult(fb,tuple(float(x) for x in decode_bits(fb,gamma,M,K)),minimum,
                        sb,float(energy[j]),count,int((2*bound)**2),'cpu_reduced_grid')
-
-def full_binary_exact(S:np.ndarray,target:np.ndarray,gamma:float,M:int=1,K:int=10,chunk_power:int=16,device:str='cuda') -> ExactResult:
-    """Independent full-bitspace torch enumeration (CUDA or CPU smoke test)."""
-    try: import torch
-    except ImportError as exc: raise RuntimeError('install torch with CUDA') from exc
-    if device not in ('cuda','cpu'): raise ValueError('device must be cuda or cpu')
-    if device=='cuda' and not torch.cuda.is_available(): raise RuntimeError('a CUDA GPU is required for full GPU enumeration')
-    n=2*(1+M+K)
-    if n>30: raise ValueError('exhaustive GPU oracle restricted to <=30 bits')
-    if chunk_power<1 or chunk_power>20:raise ValueError('invalid chunk')
-    s=torch.tensor(np.asarray(S,float),device=device,dtype=torch.float64)
-    target=torch.tensor(np.asarray(target,float),device=device,dtype=torch.float64)
-    w=torch.tensor(gamma*np.array([-(2.**M)]+[2.**i for i in range(M)]+[2.**-i for i in range(1,K+1)]),device=device,dtype=torch.float64)
-    total=1<<n; shifts=torch.arange(n-1,-1,-1,device=device,dtype=torch.int64)
-    best=[]
-    for begin in range(0,total,1<<chunk_power):
-        codes=torch.arange(begin,min(total,begin+(1<<chunk_power)),device=device,dtype=torch.int64)
-        bits=((codes[:,None]>>shifts[None,:])&1).to(torch.float64)
-        q=1+M+K;y=torch.stack((bits[:,:q]@w,bits[:,q:]@w),dim=1)
-        res=y@s.T-target[None,:]
-        obj=(res*res).sum(1)
-        vals,ix=torch.topk(obj,k=2,largest=False,sorted=True)
-        for val,index in zip(vals.cpu().tolist(),ix.cpu().tolist()):
-            best.append((val,int(codes[index].item())))
-        # Keep best two candidates globally to avoid memory growth
-        best=sorted(best,key=lambda z:(z[0],z[1]))[:2]
-    first,second=best
-    fb=format(first[1],f'0{n}b');sb=format(second[1],f'0{n}b')
-    return ExactResult(fb,tuple(map(float,decode_bits(fb,gamma,M,K))),float(first[0]),sb,float(second[0]),0,total,f'{device}_full_binary_enumeration')
-
-
-def cuda_full_exact(S,target,gamma,M=1,K=10,chunk_power=16):
-    return full_binary_exact(S,target,gamma,M,K,chunk_power,device='cuda')

@@ -1,6 +1,6 @@
 PYTHON ?= python
 
-.PHONY: reproduce five-pde sweep tables figures verify qci experiments cuda-test
+.PHONY: reproduce five-pde sweep tables figures verify qci experiments solver-test
 
 five-pde:
 	$(PYTHON) finite_bit/src/figure3_control.py
@@ -35,7 +35,7 @@ experiments:
 	$(PYTHON) experiments/run_b8_optimizer.py
 	$(PYTHON) analysis/check_experiment_outputs.py
 
-cuda-test:
+solver-test:
 	$(PYTHON) finite_bit/tests/check_batch_qubo_cuda.py
 
-reproduce: figures verify qci experiments cuda-test
+reproduce: figures verify qci experiments solver-test

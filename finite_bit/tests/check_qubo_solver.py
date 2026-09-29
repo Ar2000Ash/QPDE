@@ -1,10 +1,10 @@
-"""Small independent brute-force tests; CUDA checks are conditional on a real GPU."""
+"""Check the QUBO solver against independently enumerated minima."""
 from __future__ import annotations
 import sys
 from pathlib import Path
 import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
-from batch_qubo_cuda import solve_qubos, solve_qubos_cuda
+from qubo_solver import solve_qubos
 
 
 def reference(Q):
@@ -53,15 +53,3 @@ if __name__ == '__main__':
         print('SKIP: PyTorch is not installed')
         raise SystemExit(0)
     run('cpu')
-    if torch.cuda.is_available():
-        run('cuda')
-        assert solve_qubos_cuda([np.zeros((2, 2))])[0].bitstring == '00'
-        print('PASS: CUDA convenience entry point')
-    else:
-        try:
-            solve_qubos_cuda([np.zeros((2, 2))])
-        except RuntimeError as e:
-            assert 'CUDA' in str(e)
-        else:
-            raise AssertionError('GPU entry point silently fell back to CPU')
-        print('SKIP: no CUDA GPU available; CUDA path not device-tested')

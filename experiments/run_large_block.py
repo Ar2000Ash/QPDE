@@ -1,17 +1,4 @@
-#!/usr/bin/env python3
-"""Re-run the large-block Poisson representability/resource experiment.
-
-This is the experiment behind the reported B = 2, 4, 8, 16, 32 sweep at fixed
-N = 960.  It computes classical dense Schur inverse blocks, quantizes those blocks
-onto the signed fixed-point grid, and then uses the quantized factors in the complete
-block solve.
-
-Important interpretation
-------------------------
-This script studies *representability and propagation*.  It intentionally does not
-claim to solve the 96-, 192-, or 384-bit QUBOs globally.  The reported analysis makes the same
-distinction.
-"""
+"""Evaluate fixed-point representability across Poisson block sizes."""
 
 from __future__ import annotations
 
@@ -126,7 +113,6 @@ def run_experiment(
                 "max_inverse_frobenius_residual": max(inverse_residuals),
                 "mean_inverse_frobenius_residual": float(np.mean(inverse_residuals)),
                 "scaling_modes_used": ";".join(sorted(set(scaling_modes))),
-                # This field is machine-dependent and is not used as a scientific result.
                 "schur_factor_generation_time_s": schur_time,
             }
         )

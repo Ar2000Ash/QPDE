@@ -1,10 +1,4 @@
-#!/usr/bin/env python3
-"""Run fast consistency checks against the numerical claims reported in the study.
-
-The checks are deliberately simple and transparent.  They verify counts, selected
-headline values, convergence slopes, and hardware accounting from the archived data.
-They do not re-run the expensive exact-oracle enumerations or contact the hardware.
-"""
+"""Check numerical tables and hardware statistics."""
 
 from __future__ import annotations
 
@@ -106,7 +100,7 @@ def main() -> None:
     check_b8_optimizer()
     check_dirac3()
     check_archive()
-    print("All archived-result consistency checks passed.")
+    print("All numerical checks passed.")
 
 
 if __name__ == "__main__":

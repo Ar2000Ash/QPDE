@@ -1,7 +1,4 @@
-"""Sequential exhaustive solution of QUBO matrices with bounded device memory.
-
-Each QUBO is processed independently. CUDA requires a compatible PyTorch build.
-"""
+"""Solve QUBO matrices sequentially by exhaustive binary search."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -12,11 +9,11 @@ import numpy as np
 
 @dataclass(frozen=True)
 class QUBOResult:
-    bitstring: str                    # most significant bit first
-    energy: float                     # x.T @ Q @ x, recomputed in CPU float64
+    bitstring: str
+    energy: float
     n_bits: int
-    states_evaluated: int             # logical states, not CUDA thread count
-    elapsed_seconds: float            # includes matrix upload and device work
+    states_evaluated: int
+    elapsed_seconds: float
     backend: str
 
 
@@ -28,36 +25,7 @@ def solve_qubos(
     prefix_batch: int = 32,
     max_bits: int = 24,
 ) -> list[QUBOResult]:
-    """Solve an array/iterable of QUBOs one at a time using exhaustive search.
-
-    Parameters
-    ----------
-    qubos : (jobs,n,n) ndarray or iterable of (n,n) matrices
-        A 2-D ndarray is also accepted as one job; an iterable may have mixed
-        matrix sizes. Input matrices stay on the host until their turn.
-    device : {'cuda', 'cpu'}
-        CUDA is the normal backend; CPU is useful for small verification cases.
-    chunk_power : int
-        Enumerate 2**min(chunk_power,n) reusable suffix states per job.
-        Default 16 retains ~8 MiB of float64 suffix bit vectors for n>=16.
-    prefix_batch : int
-        Number of high-bit assignments evaluated together; controls the
-        transient (prefix_batch, 2**chunk_power) score buffer.
-    max_bits : int
-        Explicit complexity guard. Default 24 allows 16,777,216 states/job;
-        increasing it can make exhaustive search prohibitively expensive.
-
-    Returns
-    -------
-    list[QUBOResult]
-        Order matches the input. Equal objective scores choose the smallest
-        integer bitstring (000... first), under the chosen float64 arithmetic.
-
-    PyTorch is optional to import this module but required to run it. GPU
-    execution needs a CUDA-enabled build and device; it does not silently fall
-    back to CPU. Near-degenerate floating-point minima may require higher
-    precision checks to establish a mathematical certificate.
-    """
+    """Minimize QUBOs sequentially and return their bitstrings and energies."""
     if device not in ('cuda', 'cpu'):
         raise ValueError("device must be 'cuda' or 'cpu'")
     if not isinstance(chunk_power, int) or not 1 <= chunk_power <= 20:
@@ -102,8 +70,6 @@ def solve_qubos(
                 torch.cuda.synchronize()
             start_time = perf_counter()
 
-            # Reuse the binary suffix table across consecutive jobs of equal
-            # low-bit size. Do not retain multiple tables on GPU.
             if low_bits != last_low_bits:
                 codes = torch.arange(n_suffix, dtype=torch.int64, device=device)
                 shifts = torch.arange(low_bits - 1, -1, -1, dtype=torch.int64, device=device)
@@ -113,7 +79,6 @@ def solve_qubos(
             q = torch.as_tensor(Q, dtype=torch.float64, device=device)
             A, B = q[:high_bits, :high_bits], q[:high_bits, high_bits:]
             C, D = q[high_bits:, :high_bits], q[high_bits:, high_bits:]
-            # E(p,s) = p^T A p + s^T D s + p^T(B+C^T)s.
             low_energy = ((suffix_bits @ D) * suffix_bits).sum(dim=1)
             cross_matrix = B + C.T
             prefix_shifts = torch.arange(high_bits - 1, -1, -1, dtype=torch.int64, device=device)
@@ -131,14 +96,14 @@ def solve_qubos(
                 else:
                     scores = low_energy.unsqueeze(0)
                 flat = scores.reshape(-1)
-                local_index = torch.argmin(flat)  # lowest index wins a tie
+                local_index = torch.argmin(flat)
                 candidate = flat[local_index]
                 global_index = (prefix_codes[0] << low_bits) + local_index
-                improve = candidate < best_energy  # retain earlier index on ties
+                improve = candidate < best_energy
                 best_index = torch.where(improve, global_index, best_index)
                 best_energy = torch.minimum(best_energy, candidate)
 
-            index = int(best_index.item())  # one result transfer per QUBO
+            index = int(best_index.item())
             bits = format(index, f'0{n}b')
             binary = np.fromiter((int(b) for b in bits), dtype=np.float64, count=n)
             energy = float(binary @ Q @ binary)
@@ -151,7 +116,7 @@ def solve_qubos(
 
 
 def solve_qubos_cuda(qubos: Iterable[np.ndarray] | np.ndarray, **kwargs) -> list[QUBOResult]:
-    """Convenience entry point that always selects CUDA (no CPU fallback)."""
+    """Run the QUBO solver on the CUDA device."""
     if 'device' in kwargs:
         raise TypeError('solve_qubos_cuda fixes device=cuda; use solve_qubos for CPU tests')
     return solve_qubos(qubos, device='cuda', **kwargs)

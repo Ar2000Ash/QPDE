@@ -1,15 +1,4 @@
-#!/usr/bin/env python3
-"""Re-run the 96-bit B=8 optimizer experiment from the reported study.
-
-The experiment compares four states/strategies on 32 representative inverse-column
-QUBOs: direct fixed-point rounding, greedy polishing, cold-start simulated annealing
-plus greedy polishing, and warm-start simulated annealing plus greedy polishing.  It
-then applies greedy polishing to all 960 inverse columns and evaluates the downstream
-Poisson solve.
-
-The random seeds and search budgets match the archived experiment.  No exact 96-bit
-ground-state claim is made or implied.
-"""
+"""Compare rounding, greedy search, and annealing for 96-bit QUBOs."""
 
 from __future__ import annotations
 
@@ -71,9 +60,6 @@ def run_experiment(output_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.Dat
         for S, S_inv in zip(schur_blocks, exact_inverse_blocks)
     ]
 
-    # -------------------------------------------------------------------------
-    # Representative 32-QUBO comparison: four Schur blocks x eight columns.
-    # -------------------------------------------------------------------------
     representative_rows: list[dict[str, object]] = []
     for block_1based in REPRESENTATIVE_BLOCKS_1BASED:
         block_index = block_1based - 1
@@ -173,9 +159,6 @@ def run_experiment(output_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.Dat
     summary = summary.sort_values("_order").drop(columns="_order")
     summary.to_csv(output_dir / "summary_by_method.csv", index=False)
 
-    # -------------------------------------------------------------------------
-    # Full 960-column greedy polish and downstream PDE solve.
-    # -------------------------------------------------------------------------
     rounded_inverse_blocks: list[np.ndarray] = []
     greedy_inverse_blocks: list[np.ndarray] = []
     full_rows: list[dict[str, object]] = []
@@ -259,7 +242,6 @@ def run_experiment(output_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.Dat
                 "columns_improved_fraction": float(
                     np.mean(full_columns["objective_improvement_fraction"] > 1e-15)
                 ),
-                # Runtime is included for provenance only; it is machine dependent.
                 "runtime_seconds_for_greedy_polish": polish_seconds,
             },
         ]
@@ -274,7 +256,6 @@ def run_experiment(output_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.Dat
             "cold": "100000 + 1000*block_1based + column",
             "warm": "200000 + 1000*block_1based + column",
         },
-        "interpretation": "No exact 96-bit enumeration or ground-state certificate is claimed.",
     }
     (output_dir / "run_metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
 

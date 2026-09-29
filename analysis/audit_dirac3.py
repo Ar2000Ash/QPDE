@@ -1,10 +1,4 @@
-#!/usr/bin/env python3
-"""Print a compact audit of the archived QCI Dirac-3 hardware campaign.
-
-This script uses only stored CSV/JSON evidence.  It never contacts QCI services and
-requires no credentials.  Its purpose is to reproduce the hardware accounting and the
-per-PDE exact-hit/residual summaries reported in the study.
-"""
+"""Summarize the recorded QCI jobs, samples, and inverse-column statistics."""
 
 from __future__ import annotations
 

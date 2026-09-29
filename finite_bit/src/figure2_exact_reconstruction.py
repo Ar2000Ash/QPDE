@@ -1,7 +1,4 @@
-"""Poisson and Klein–Gordon finite-bit precision sweep.
-
-Successive Schur blocks are formed using the preceding quantized inverse.
-"""
+"""Compute the Poisson and Klein–Gordon precision sweep."""
 from __future__ import annotations
 from dataclasses import dataclass
 import numpy as np
@@ -29,11 +26,7 @@ def recursively_quantized_factors(A: np.ndarray, gamma: float, K: int, M: int=1)
 
 
 def poisson_sweep_reference(nx:int=6,ny:int=2):
-    """Discrete manufactured Poisson solution, zero trace on all four sides.
-
-    u=(sin(pi*x)+0.2*sin(2*pi*x))*sin(pi*y); b=A@u in the archived
-    *discrete manufactured* convention.  Thus no nonzero boundary load.
-    """
+    """Discrete manufactured Poisson solution, zero trace on all four sides."""
     ix=np.arange(1,nx+1)/(nx+1)
     iy=np.arange(1,ny+1)/(ny+1)
     X,V=np.meshgrid(ix,iy,indexing='ij')
@@ -41,11 +34,7 @@ def poisson_sweep_reference(nx:int=6,ny:int=2):
 
 
 def kg_sweep_trajectory(low,up,inverse,n:int=6,dt:float=.015,T:float=.3):
-    """Unforced KG, c=1, mu=1.25; u=sin(pi*x), v=0 initially.
-
-    Both u and v obey homogeneous Dirichlet conditions. The exact continuum
-    reference uses omega=sqrt(pi**2+mu**2), not the fixed-validation omega.
-    """
+    """Unforced KG, c=1, mu=1.25; u=sin(pi*x), v=0 initially."""
     x=np.arange(1,n+1)/(n+1)
     u=np.sin(np.pi*x)
     v=np.zeros_like(u)

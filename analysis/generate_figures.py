@@ -1,21 +1,4 @@
-#!/usr/bin/env python3
-"""Regenerate the publication-quality result figures from processed CSV files.
-
-The plotting layer is intentionally independent of the manuscript source.  Every panel
-is generated from files under ``data/processed`` using Matplotlib.  When a LaTeX
-installation is available, labels are rendered through LaTeX so that the typography
-matches the figures used in the associated study.  A STIX serif fallback is used when
-LaTeX is unavailable.
-
-Outputs
--------
-figures/figure_02_quantization_convergence.png
-figures/figure_03_five_pde_validation.png
-figures/figure_04_large_block_scaling.png
-figures/figure_05_b8_optimizer.png
-figures/figure_06_dirac3_audit.png
-figures/figure_07_dirac3_reconstructions.png
-"""
+"""Generate publication figures from processed numerical data."""
 
 from __future__ import annotations
 
@@ -32,7 +15,6 @@ DATA = ROOT / "data" / "processed"
 OUT = ROOT / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 
-# A restrained print-safe palette.  Keeping it here makes all exported figures consistent.
 BLUE = "#1f4e79"
 TEAL = "#2a7f79"
 ORANGE = "#c97a1d"
@@ -145,8 +127,6 @@ def figure_04() -> None:
     ax.set_ylim(3, 1.2e5)
 
     ax = axes[1]
-    # The B=2 solution error is near machine precision and intentionally lies below
-    # the visible plotting range, matching the interpretation of the reported figure.
     ax.loglog(d["B"], d["relative_error_vs_dense"], "o-", color=BLUE, label="solution error", base=2)
     ax.loglog(d["B"], d["relative_residual"], "D-", color=RED, label="PDE residual", base=2)
     ax.set_title("(b) Propagated accuracy")
@@ -219,8 +199,6 @@ def figure_06() -> None:
     axes[1].axhline(1.0, color=GRAY, linestyle="--", linewidth=1.0)
     axes[1].set_title("(b) Residual ratio")
     axes[1].set_xlabel("Mapped instance")
-    # Deliberately omit the eta equation from the y-axis label; its definition belongs
-    # in the accompanying documentation and data dictionary, not inside the compact plot.
     axes[1].set_ylim(0.8, 10)
     axes[1].set_xlim(0, 61)
 

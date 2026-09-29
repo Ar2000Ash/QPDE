@@ -1,4 +1,4 @@
-"""Finite-difference operators, manufactured solutions, and boundary traces."""
+"""Define the PDE operators, manufactured fields, and time integrators."""
 from __future__ import annotations
 from dataclasses import dataclass
 import numpy as np
@@ -47,8 +47,6 @@ def elliptic_blocks(name:str,nx:int=10,ny:int=2)->tuple[np.ndarray,np.ndarray,np
                 ni,nj=i+di,j+dj
                 if not (1<=ni<=nx and 1<=nj<=ny):
                     boundary[row]+=coupling*manufacture(name,np.array(ni*hx),np.array(nj*hy))
-    # b = (continuous source sampled on grid + boundary) plus a discretization
-    # correction. For paper's discrete-manufactured case, b=A@u exactly.
     return D,L,U,A,u,b,boundary
 
 
@@ -56,8 +54,6 @@ def heat_matrix(n:int=20,dt:float=.001,nu:float=.08)->tuple[np.ndarray,np.ndarra
     r=nu*dt*(n+1)**2
     D=np.eye(2)*(1+2*r);L=U=-r*np.eye(2)
     A=assemble_blocks([D]*(n//2),[L]*(n//2-1),[U]*(n//2-1))
-    # Physical one-dimensional tridiagonal ordering uses neighbor -r at both
-    # odd/even intra-block positions, unlike the simple block U=-r I above.
     A=np.diag([1+2*r]*n)+np.diag([-r]*(n-1),1)+np.diag([-r]*(n-1),-1)
     return A, A[:2,:2].copy(), A[2:4,:2].copy(), A[:2,2:4].copy()
 

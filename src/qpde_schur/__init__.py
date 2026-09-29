@@ -1,4 +1,4 @@
-"""Core utilities for the reusable QUBO/block-Schur reproducibility package."""
+"""Block-Schur and QUBO numerical utilities."""
 
 from .core import (
     block_schur_solve,

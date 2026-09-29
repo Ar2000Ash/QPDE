@@ -1,4 +1,4 @@
-"""Check recorded QCI finite-bit reference minima against the exact grid."""
+"""Verify finite-grid solutions against recorded QCI reference values."""
 from pathlib import Path
 import sys,csv,json
 import numpy as np
@@ -10,7 +10,6 @@ RAW=ROOT.parent/'data'/'raw'/'dirac3'/'reconstructed_60_instances.csv'
 def check():
     rows=list(csv.DictReader(RAW.open()));seen=set();errors=[]; second_errors=[]; matched=0; mismatches=[]
     for row in rows:
-        # Repeated QCI IDs share the same QUBO; only independent representative ones.
         uid=(row['S00'],row['S01'],row['S10'],row['S11'],row['gamma'],row['column'])
         if uid in seen: continue
         seen.add(uid)

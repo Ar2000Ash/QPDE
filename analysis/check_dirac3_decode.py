@@ -1,10 +1,4 @@
-#!/usr/bin/env python3
-"""Independently re-decode every archived Dirac-3 bitstring and audit derived fields.
-
-Scientific inputs are the archived bitstrings, Schur matrix entries, block scale gamma,
-and coefficient_scale. The checker DOES NOT trust stored decoded columns or residuals
-when recomputing them. It never contacts the device or mutates input files.
-"""
+"""Verify the decoded QCI bitstrings and inverse-column metrics."""
 from __future__ import annotations
 
 import math
@@ -17,7 +11,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from qpde_schur.binary import decode_bits, make_bit_layout  # noqa: E402
+from qpde_schur.binary import decode_bits, make_bit_layout
 
 RAW = ROOT / "data" / "raw" / "dirac3"
 PROCESSED = ROOT / "data" / "processed"
@@ -39,8 +33,6 @@ def equal_numeric(actual: object, expected: float, label: str) -> None:
 
 def independent_evaluation(row: pd.Series, bitstring: str) -> tuple[np.ndarray, float, float]:
     """Return decoded vector, least-squares residual, constant-free submitted energy."""
-    # pandas may infer a bitstring column as integer and strip leading zeroes.
-    # Restoring the fixed-width representation is safe only for binary digits.
     if not bitstring or len(bitstring) > 24 or any(c not in "01" for c in bitstring):
         raise AssertionError(f"{row.qci_id}: invalid binary string {bitstring!r}")
     bitstring = bitstring.zfill(24)
@@ -69,7 +61,6 @@ def check_archive() -> None:
     for _, row in reconstructed.iterrows():
         by_unique.setdefault(row.unique_id, row)
 
-    # Source Schur reference and both reference/device bitstrings, for all 60 uses.
     for _, row in reconstructed.iterrows():
         for prefix in ("hw_best", "hw_exact"):
             y, residual, energy = independent_evaluation(row, str(row[prefix + "_bitstring"]))
@@ -89,7 +80,6 @@ def check_archive() -> None:
         equal_numeric(row.inverse_residual, exact_residual,
                       row.qci_id + ".original_inverse_residual")
 
-    # Every returned bitstring, not merely the best sample in each job.
     for _, sample in samples.iterrows():
         ref = by_unique[sample.unique_id]
         y, residual, energy = independent_evaluation(ref, str(sample.bitstring))
@@ -101,7 +91,6 @@ def check_archive() -> None:
         equal_numeric(sample.computed_submitted_energy, energy,
                       sample.unique_id + f".sample_{sample.sample_index}.energy")
 
-    # Unique job summary may have selected an exact or inexact bitstring.
     for _, job in unique.iterrows():
         ref = by_unique[job.unique_id]
         for prefix, bitkey, energykey, reskey in (
@@ -115,7 +104,6 @@ def check_archive() -> None:
             equal_numeric(job[reskey], residual, job.unique_id + "." + reskey)
             equal_numeric(job[energykey], energy, job.unique_id + "." + energykey)
 
-    # Previously correct compact mapping must agree with an independent decode.
     for _, row in mapped.iterrows():
         ref = by_qci[row.qci_id]
         y, residual, energy = independent_evaluation(ref, str(row.dirac_bitstring))
@@ -130,7 +118,6 @@ def check_archive() -> None:
         equal_numeric(row.exact_ground_objective, exact_energy,
                       row.qci_id + ".mapped_exact_energy")
 
-    # Processed per-instance vectors must agree with their actual bitstrings.
     for _, row in processed.iterrows():
         ref = by_qci[row.qci_id]
         for short, full in (("hw", "hw_best"), ("exact", "hw_exact")):

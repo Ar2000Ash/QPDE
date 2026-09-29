@@ -1,8 +1,4 @@
-"""Five-PDE validation using predetermined multiscale QUBO corrections.
-
-Four solves per inverse column use gamma_p = gamma0 / 8**p. The next
-Schur block uses the preceding cached quantized inverse.
-"""
+"""Compute five-PDE results with four prescribed correction scales."""
 from __future__ import annotations
 
 import csv
@@ -43,7 +39,6 @@ def factorize(name):
             for stage in range(PASSES+1):
                 r=e-S@y
                 gamma=stage_gamma(name,stage)
-                # Strictly only for a retrospective representability check.
                 audit_correction=np.linalg.solve(S,r)
                 high=gamma*(2**M-2**(-K));low=-gamma*2**M
                 clipped=bool(np.any(audit_correction<low) or np.any(audit_correction>high))

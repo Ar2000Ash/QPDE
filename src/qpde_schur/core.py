@@ -1,12 +1,4 @@
-"""Numerical building blocks shared by the rerunnable experiments.
-
-The study considers finite-difference systems that are ordered into block-tridiagonal
-form.  The functions in this module deliberately keep that algebra explicit: they
-build the line-block Poisson test matrix, form dense Schur inverse factors, apply a
-cached block solve, and compute the fixed-point scale used in the larger-block tests.
-
-These routines use NumPy only and contain no device- or vendor-specific code.
-"""
+"""Block-Schur factorization and cached linear solves."""
 
 from __future__ import annotations
 
@@ -14,19 +6,7 @@ import numpy as np
 
 
 def poisson_line_blocks(block_size: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Return the three repeating blocks of a 5-point Poisson line ordering.
-
-    Parameters
-    ----------
-    block_size:
-        Number of grid unknowns stored in one line block.
-
-    Returns
-    -------
-    D, L, U:
-        Diagonal, lower-neighbor, and upper-neighbor blocks.  The matrix assembled
-        from these blocks has diagonal entries 4 and nearest-neighbor entries -1.
-    """
+    """Return the three repeating blocks of a 5-point Poisson line ordering."""
     b = int(block_size)
     if b < 1:
         raise ValueError("block_size must be positive")
@@ -46,11 +26,7 @@ def build_dense_block_matrix(
     U: np.ndarray,
     n_blocks: int,
 ) -> np.ndarray:
-    """Assemble a dense block-tridiagonal matrix for validation purposes.
-
-    The validation uses this dense matrix only as a reference on the modest test sizes.
-    Production sparse solvers would of course avoid materializing the full matrix.
-    """
+    """Assemble a dense block-tridiagonal matrix for validation purposes."""
     b = D.shape[0]
     n = b * int(n_blocks)
     A = np.zeros((n, n), dtype=float)
@@ -71,12 +47,7 @@ def schur_inverse_factors(
     U: np.ndarray,
     n_blocks: int,
 ) -> tuple[list[np.ndarray], list[np.ndarray]]:
-    """Form the Schur blocks and their dense inverse factors.
-
-    This function represents the *classical reference* used in the large-block
-    representability study and to seed the 96-bit heuristic experiment.  It does not
-    imply that large QUBOs were solved exactly.
-    """
+    """Form the Schur blocks and their dense inverse factors."""
     schur_blocks: list[np.ndarray] = []
     inverse_blocks: list[np.ndarray] = []
 
@@ -99,12 +70,7 @@ def gamma_from_block(
     S_inv: np.ndarray,
     integer_bits: int = 1,
 ) -> tuple[float, float, str]:
-    """Compute the per-block fixed-point scale used in the reported experiments.
-
-    For strictly diagonally dominant Schur blocks we use the analytical dominance
-    margin.  If that condition fails, the infinity norm of the inverse provides a
-    conservative fallback.  The returned mode string makes the choice auditable.
-    """
+    """Compute the per-block fixed-point scale used in the experiments."""
     offdiag_sum = np.sum(np.abs(S), axis=1) - np.abs(np.diag(S))
     alpha = np.abs(np.diag(S)) - offdiag_sum
     alpha_min = float(np.min(alpha))
@@ -137,14 +103,12 @@ def block_schur_solve(
     b = inverse_blocks[0].shape[0]
     n_blocks = len(inverse_blocks)
 
-    # Forward elimination: build the modified right-hand-side blocks.
     g: list[np.ndarray] = [np.empty(b) for _ in range(n_blocks)]
     g[0] = rhs[:b].copy()
     for i in range(1, n_blocks):
         rhs_i = rhs[i * b : (i + 1) * b]
         g[i] = rhs_i - L @ inverse_blocks[i - 1] @ g[i - 1]
 
-    # Back substitution using the same cached inverse factors.
     x: list[np.ndarray] = [np.empty(b) for _ in range(n_blocks)]
     x[-1] = inverse_blocks[-1] @ g[-1]
     for i in range(n_blocks - 2, -1, -1):

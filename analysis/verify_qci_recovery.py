@@ -1,10 +1,4 @@
-#!/usr/bin/env python3
-"""Reassemble and independently verify the archived 2026-09-26 QCI recovery package.
-
-Reconstruction is offline: no vendor API or credentials are required. The historical
-polynomial-upload bytes are NOT in this package; the 34 mathematical QUBOs are
-reconstructions and have different file SHA256 values from historic term hashes.
-"""
+"""Verify and extract the recorded QCI response package."""
 from __future__ import annotations
 import hashlib
 import shutil
@@ -59,7 +53,7 @@ def main() -> None:
                 out.write(block)
                 digest.update(block)
         if digest.hexdigest() != ZIP_HASH or archive.stat().st_size != 394421:
-            raise AssertionError('Original recovery archive SHA256/size mismatch')
+            raise AssertionError('QCI response package checksum mismatch')
         with zipfile.ZipFile(archive) as z:
             if z.testzip() is not None:
                 raise AssertionError('Corrupted recovery ZIP member')
@@ -72,10 +66,6 @@ def main() -> None:
         validate_manifest(pkg)
         for name in ('verify_package.py', 'reconstruct_and_audit.py', 'verify_package.py'):
             subprocess.run([sys.executable,str(pkg/'scripts'/name)],cwd=pkg,check=True)
-        # Derived floating-point files can vary in their last digits across NumPy
-        # builds: verify immutable source hashes, then compare numerical outputs via
-        # verify_package.py (already rerun above), rather than demanding identical
-        # derived JSON/CSV bytes across operating systems.
         validate_manifest(pkg, sources_only=True)
         report = (pkg/'AUDIT_REPORT.json').read_text()
         import json
@@ -84,7 +74,7 @@ def main() -> None:
                 data['unique_hardware_returned_sample_states'],
                 data['original_sample_rows_with_wrong_signed_decoding_or_residual']) == (34,60,457,136)
         assert data['reconstructed_byte_hashes_matching_historical_hashes']==0
-        print('PASS: original recovery ZIP, full package hashes, 34 mathematical QUBOs, 457 raw samples and offline regeneration verified.')
+        print('PASS: QCI response package and numerical checks.')
 
 
 if __name__ == '__main__':

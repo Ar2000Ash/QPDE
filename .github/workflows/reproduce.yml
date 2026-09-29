@@ -44,8 +44,8 @@ jobs:
           python analysis/reconstruct_dirac3_pde.py
           python analysis/audit_dirac3.py
           python analysis/verify_qci_recovery.py
-      - name: Check CUDA QUBO interface on CPU
-        run: python finite_bit/tests/check_batch_qubo_cuda.py
+      - name: Check QUBO solver
+        run: python finite_bit/tests/check_qubo_solver.py
       - name: Recompute and check larger-block numerical studies
         run: |
           python experiments/run_large_block.py --output /tmp/large_block.csv

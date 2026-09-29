@@ -1,10 +1,4 @@
-#!/usr/bin/env python3
-"""Verify the 34 directly accessible reconstructed normalized QUBO input tables.
-
-Independent of historical file formatting. Compares each of 300 published terms to
-Q(S,gamma,j) derived from raw archived Schur blocks; checks full polynomial energy
-on the two preserved reference/hardware states per QUBO. No QCI contact required.
-"""
+"""Verify normalized QUBO coefficient tables against the Schur blocks."""
 from __future__ import annotations
 import hashlib
 from pathlib import Path

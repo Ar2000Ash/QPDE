@@ -1,13 +1,4 @@
-#!/usr/bin/env python3
-"""Regenerate every compact CSV used by the analysis and figure scripts.
-
-The repository keeps immutable experiment outputs under ``data/raw``.  This script
-converts those primary outputs into the compact tables consumed by PGFPlots in
-the repository verification and figure-generation scripts.
-
-Running this script is intentionally cheap: it performs only deterministic
-post-processing and does not repeat the expensive exact enumerations or hardware jobs.
-"""
+"""Prepare tables and figure data from the experiment records."""
 
 from __future__ import annotations
 
@@ -115,10 +106,6 @@ def build_dirac3() -> None:
     """Create the hardware-audit and end-to-end reconstruction CSVs."""
     raw = RAW / "dirac3"
 
-    # Independently reconstruct all hardware-selected terminal PDE fields from
-    # the archived Schur blocks and original returned 24-bit bitstrings.
-    # The archive's dense terminal field defines b=A@u_ref; full transient
-    # forcing/BC histories were not recovered and are not claimed here.
     independent = regenerate(raw=raw, out=OUT, write=True, strict=True)
     heat = independent["fields"]["dirac_heat.csv"]
     poisson = independent["fields"]["dirac_poisson.csv"]
@@ -144,7 +131,6 @@ def build_dirac3() -> None:
     )
     _write(scatter, "dirac_scatter.csv")
 
-    # Join decoded vectors so the compact mapped audit remains easy to inspect.
     reconstructed = pd.read_csv(raw / "reconstructed_60_instances.csv")
     decoded = reconstructed[
         [
@@ -177,7 +163,6 @@ def build_dirac3() -> None:
     )
     _write(mapped, "dirac_mapped.csv")
 
-    # Aggregate local hardware quality and merge the end-to-end PDE reconstruction.
     pde_solution = independent["summary"].set_index("pde")
     rows: list[dict[str, object]] = []
     for pde_name, group in audit.groupby("pde_name", sort=False):
@@ -226,7 +211,6 @@ def build_dirac3() -> None:
     _write(plot_summary, "dirac_plot_summary.csv")
 
 
-
 def build_multiscale_figure3() -> None:
     """Derive Table 3 and Figure 3 data from the five-PDE experiments."""
     reconstruction = ROOT / "finite_bit"
@@ -269,7 +253,6 @@ def build_multiscale_figure3() -> None:
         ]
         rows.append(" & ".join(row) + r" \\")
     (OUT / "table3_multiscale_rows.tex").write_text("\n".join(rows) + "\n", encoding="utf-8")
-
 
 
 def main() -> None:

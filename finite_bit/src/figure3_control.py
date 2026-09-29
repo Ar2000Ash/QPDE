@@ -1,4 +1,4 @@
-"""Single-grid residual-correction control for the five-PDE experiment."""
+"""Compute the five-PDE single-grid correction control."""
 from __future__ import annotations
 import csv
 import json
@@ -50,12 +50,7 @@ def factorize_fixed(name: str):
 
 
 def integrate_with_last_rhs(name, inverses, A):
-    """Time integrators and Dirichlet traces matching pde_models.integrate.
-
-    Returns final RHS computed from the approximate trajectory to define the
-    reported final *algebraic* residual, which cannot be A@x - b for time cases
-    using an unrelated manufactured endpoint.
-    """
+    """Time integrators and Dirichlet traces matching pde_models.integrate."""
     grid=np.arange(1,21)/21
     _,lower,upper=extract_blocks(A,B)
     rhs=None
@@ -93,7 +88,6 @@ def compute(name):
     if ell is None:
         result,rhs=integrate_with_last_rhs(name,Y,A)
         reference=integrate(name,dense_factor,A)
-        # Reuse the separately coded standard integrator as an independent check.
         assert np.max(np.abs(result-integrate(name,Y,A)))<2e-13
         grid=np.arange(1,21)/21
         if name=='klein_gordon_1d':

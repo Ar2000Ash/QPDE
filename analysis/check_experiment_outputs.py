@@ -1,7 +1,4 @@
-"""Compare independent large-block and optimizer runs with published tables.
-
-Elapsed times are hardware-dependent and are excluded from numerical comparisons.
-"""
+"""Compare the larger-block numerical runs with the reference tables."""
 from __future__ import annotations
 
 import argparse
