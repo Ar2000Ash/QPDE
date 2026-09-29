@@ -50,7 +50,7 @@ def main():
                        label='Predetermined 1/8 multiscale refinement')
         panel.set_xticks(xs,DISPLAY,rotation=22,ha='right');panel.set_xlim(-.45,4.45)
         panel.set_ylabel(lab);panel.grid(axis='y',which='both',alpha=.3)
-        panel.set_ylim(min(np.r_[v,oldv])*.42,max(np.r_[v,oldv])*2.5)
+        panel.set_ylim(min(np.r_[v,controlv])*.42,max(np.r_[v,controlv])*2.5)
         panel.legend(loc='best',fontsize=8)
         for i,y in enumerate(v):panel.annotate(f'{y:.1e}',(i,y),xytext=(0,-17),ha='center',fontsize=8,textcoords='offset points')
     ax.set_title('(a) End-to-end accuracy');ay.set_title('(b) Cached inverse quality')
