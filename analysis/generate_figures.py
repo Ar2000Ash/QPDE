@@ -115,6 +115,7 @@ def figure_03() -> None:
 def figure_04() -> None:
     """Resource growth and propagated accuracy for the large-block study."""
     d = pd.read_csv(DATA / "largeB.csv")
+    d = d.loc[d["B"].isin((4, 8, 16, 32))].copy()
     fig, axes = plt.subplots(1, 2, figsize=(9.0, 3.45))
 
     ax = axes[0]
