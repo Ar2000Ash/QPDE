@@ -15,7 +15,7 @@ python -m pip install -r requirements.txt
 make reproduce
 ```
 
-The default workflow rebuilds the five-PDE results, verifies all numerical tables, regenerates Figures 2–7, checks the recorded QCI results, and runs the larger-block experiments. A PyTorch installation is optional for the standalone QUBO solver.
+The default workflow recomputes the five-PDE validation, builds the processed datasets and Figures 2–7, checks the archived hardware records, and runs the larger-block studies. The QCI checks use recorded device results; they do not submit new hardware jobs. A PyTorch installation is optional for the standalone QUBO solver.
 
 ## Experiments
 
@@ -29,7 +29,13 @@ The default workflow rebuilds the five-PDE results, verifies all numerical table
 
 The five-PDE validation uses `B=2`, `M=1`, `K=10` and four correction scales, `gamma_p = gamma0 / 8**p`, for `p=0,1,2,3`. Initial scales are 0.60 for Heat and Burgers, 0.01 for Poisson and Helmholtz, and 1.00 for Klein–Gordon. The transient cases use `dt=0.001` and `T=0.05`. The local minimizations use an exact reduced-grid finite-bit solver.
 
-The hardware study decodes the recorded QCI bitstrings into cached Schur-inverse columns, reconstructs the terminal linear systems, and compares the resulting fields with the dense references. The terminal right-hand sides are defined by `b = A @ u_ref`.
+The five-PDE relative errors against the dense discrete solutions (Table 3) are 1.34e-5 (Heat), 1.10e-5 (Burgers), 3.05e-6 (Poisson), 6.88e-6 (Helmholtz), and 2.30e-5 (Klein–Gordon). Across the five cases, the experiment makes 480 inverse-column QUBO calls, including 360 nonzero correction updates. The fixed-grid control is archived in `finite_bit/outputs/figure3_control.csv`.
+
+Table 4 and Figure 4 report **four** Poisson block sizes, `B = 4, 8, 16, 32`, for `N = 960`, `M = 1`, and `K = 10`. These correspond to 48, 96, 192, and 384 bits per inverse-column QUBO; the respective dense upper-triangular QUBO term counts are 1,176, 4,656, 18,528, and 73,920. The maximum local Schur condition number ranges from 2.96 to 5.29. The largest reported relative solution error is 2.35e-3, and the `B = 32` relative residual is 1.20e-1. The original `B = 2` diagnostic is retained in `data/raw/large_block/` and `data/processed/largeB.csv` for reproducibility but is **not** part of Table 4 or Figure 4.
+
+The `B = 8` study (Table 5) compares direct fixed-point rounding, greedy descent, and cold-/warm-start simulated annealing on 32 representative 96-bit QUBOs. Cold and warm annealing use 140 and 120 sweeps **per restart**, respectively, with two restarts and one deterministic seed per method and instance, followed by at most eight greedy sweeps. These are optimization-quality tests, not claims of global solutions to 96-bit QUBOs.
+
+The Dirac-3 campaign (Table 6) comprises 34 unique completed QUBO jobs mapped to 60 inverse-column uses, with 31/60 exact mapped bitstring hits, 17/34 exact unique-QUBO hits, and 558 s of metered device usage. Jobs used `sample-hamiltonian-integer`, two levels per variable, no sum constraint, and normalized constant-free coefficients. Of the 34 jobs, 32 requested 20 samples at relaxation schedule 1; two Poisson jobs requested 100 samples at schedule 4. The hardware study decodes the recorded bitstrings into cached Schur-inverse columns, reconstructs the terminal linear systems, and compares the resulting fields with dense references. The terminal right-hand sides are defined by `b = A @ u_ref`; the offline replay does not re-run the QCI hardware.
 
 ## Directory layout
 
